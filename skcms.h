@@ -204,7 +204,7 @@ typedef enum skcms_AlphaFormat {
 // Convert npixels pixels from src format and color profile to dst format and color profile
 // and return true, otherwise return false.  It is safe to alias dst == src if dstFmt == srcFmt.
 
-GFXCMS_API bool skcms_Transform(const void* src,
+GFXCMS_API bool skcmsTransform(const void* src,
                              skcms_PixelFormat srcFmt,
                              skcms_AlphaFormat srcAlpha,
                              const skcms_ICCProfile* srcProfile,
@@ -214,8 +214,8 @@ GFXCMS_API bool skcms_Transform(const void* src,
                              const skcms_ICCProfile* dstProfile,
                              size_t npixels);
 
-// As skcms_Transform(), supporting srcFmts with a palette.
-GFXCMS_API bool skcms_TransformWithPalette(const void* src,
+// As skcmsTransform(), supporting srcFmts with a palette.
+GFXCMS_API bool skcmsTransformWithPalette(const void* src,
                                         skcms_PixelFormat srcFmt,
                                         skcms_AlphaFormat srcAlpha,
                                         const skcms_ICCProfile* srcProfile,
