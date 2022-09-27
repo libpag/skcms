@@ -103,7 +103,7 @@ const skcms_ICCProfile* cms_sRGB_profile() {
     #define small_memcpy memcpy
 #endif
 
-// ~~~~ Impl. of skcms_Transform() ~~~~
+// ~~~~ Impl. of skcmsTransform() ~~~~
 
 typedef enum {
     Op_load_a8,
@@ -281,7 +281,7 @@ static size_t bytes_per_pixel(skcms_PixelFormat fmt) {
     return 0;
 }
 
-bool skcms_Transform(const void*             src,
+bool skcmsTransform(const void*             src,
                      skcms_PixelFormat       srcFmt,
                      skcms_AlphaFormat       srcAlpha,
                      const skcms_ICCProfile* srcProfile,
@@ -290,12 +290,12 @@ bool skcms_Transform(const void*             src,
                      skcms_AlphaFormat       dstAlpha,
                      const skcms_ICCProfile* dstProfile,
                      size_t                  npixels) {
-    return skcms_TransformWithPalette(src, srcFmt, srcAlpha, srcProfile,
+    return skcmsTransformWithPalette(src, srcFmt, srcAlpha, srcProfile,
                                       dst, dstFmt, dstAlpha, dstProfile,
                                       npixels, nullptr);
 }
 
-bool skcms_TransformWithPalette(const void*             src,
+bool skcmsTransformWithPalette(const void*             src,
                                 skcms_PixelFormat       srcFmt,
                                 skcms_AlphaFormat       srcAlpha,
                                 const skcms_ICCProfile* srcProfile,
