@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace gfx {
+
 #if defined(__ARM_NEON)
     #include <arm_neon.h>
 #elif defined(__SSE__)
@@ -3089,3 +3091,5 @@ bool skcms_MakeUsableAsDestinationWithSingleCurve(skcms_ICCProfile* profile) {
     assert_usable_as_destination(profile);
     return true;
 }
+
+}  // namespace gfx

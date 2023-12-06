@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <string.h>
 
+namespace gfx {
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -402,3 +404,5 @@ static inline void skcms_SetXYZD50(skcms_ICCProfile* p, const skcms_Matrix3x3* m
 #ifdef __cplusplus
 }
 #endif
+
+}  // namespace gfx

@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+namespace gfx {
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,3 +51,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+}  // namespace gfx
