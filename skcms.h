@@ -9,8 +9,8 @@
 
 // skcms.h contains the entire public API for skcms.
 
-#ifndef GFXCMS_API
-    #define GFXCMS_API
+#ifndef SKCMS_API
+    #define SKCMS_API
 #endif
 
 #include <stdbool.h>
@@ -18,13 +18,9 @@
 #include <stdint.h>
 #include <string.h>
 
-namespace gfx {
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
 
 // A row-major 3x3 matrix (ie vals[row][col])
 typedef struct skcms_Matrix3x3 {
@@ -32,8 +28,8 @@ typedef struct skcms_Matrix3x3 {
 } skcms_Matrix3x3;
 
 // It is _not_ safe to alias the pointers to invert in-place.
-GFXCMS_API bool            skcms_Matrix3x3_invert(const skcms_Matrix3x3*, skcms_Matrix3x3*);
-GFXCMS_API skcms_Matrix3x3 skcms_Matrix3x3_concat(const skcms_Matrix3x3*, const skcms_Matrix3x3*);
+SKCMS_API bool            skcms_Matrix3x3_invert(const skcms_Matrix3x3*, skcms_Matrix3x3*);
+SKCMS_API skcms_Matrix3x3 skcms_Matrix3x3_concat(const skcms_Matrix3x3*, const skcms_Matrix3x3*);
 
 // A row-major 3x4 matrix (ie vals[row][col])
 typedef struct skcms_Matrix3x4 {
@@ -51,9 +47,20 @@ typedef struct skcms_TransferFunction {
     float g, a,b,c,d,e,f;
 } skcms_TransferFunction;
 
-GFXCMS_API float skcms_TransferFunction_eval  (const skcms_TransferFunction*, float);
-GFXCMS_API bool  skcms_TransferFunction_invert(const skcms_TransferFunction*,
+SKCMS_API float skcms_TransferFunction_eval  (const skcms_TransferFunction*, float);
+SKCMS_API bool  skcms_TransferFunction_invert(const skcms_TransferFunction*,
                                               skcms_TransferFunction*);
+
+typedef enum skcms_TFType {
+    skcms_TFType_Invalid,
+    skcms_TFType_sRGBish,
+    skcms_TFType_PQish,
+    skcms_TFType_HLGish,
+    skcms_TFType_HLGinvish,
+} skcms_TFType;
+
+// Identify which kind of transfer function is encoded in an skcms_TransferFunction
+SKCMS_API skcms_TFType skcms_TransferFunction_getType(const skcms_TransferFunction*);
 
 // We can jam a couple alternate transfer function forms into skcms_TransferFunction,
 // including those matching the general forms of the SMPTE ST 2084 PQ function or HLG.
@@ -62,13 +69,13 @@ GFXCMS_API bool  skcms_TransferFunction_invert(const skcms_TransferFunction*,
 //                              max(A + B|encoded|^C, 0)
 //    linear = sign(encoded) * (------------------------) ^ F
 //                                  D + E|encoded|^C
-GFXCMS_API bool skcms_TransferFunction_makePQish(skcms_TransferFunction*,
+SKCMS_API bool skcms_TransferFunction_makePQish(skcms_TransferFunction*,
                                                 float A, float B, float C,
                                                 float D, float E, float F);
 // HLGish:
 //            { K * sign(encoded) * ( (R|encoded|)^G )          when 0   <= |encoded| <= 1/R
 //   linear = { K * sign(encoded) * ( e^(a(|encoded|-c)) + b )  when 1/R <  |encoded|
-GFXCMS_API bool skcms_TransferFunction_makeScaledHLGish(skcms_TransferFunction*,
+SKCMS_API bool skcms_TransferFunction_makeScaledHLGish(skcms_TransferFunction*,
                                                        float K, float R, float G,
                                                        float a, float b, float c);
 
@@ -91,9 +98,9 @@ static inline bool skcms_TransferFunction_makeHLG(skcms_TransferFunction* tf) {
 }
 
 // Is this an ordinary sRGB-ish transfer function, or one of the HDR forms we support?
-GFXCMS_API bool skcms_TransferFunction_isSRGBish(const skcms_TransferFunction*);
-GFXCMS_API bool skcms_TransferFunction_isPQish  (const skcms_TransferFunction*);
-GFXCMS_API bool skcms_TransferFunction_isHLGish (const skcms_TransferFunction*);
+SKCMS_API bool skcms_TransferFunction_isSRGBish(const skcms_TransferFunction*);
+SKCMS_API bool skcms_TransferFunction_isPQish  (const skcms_TransferFunction*);
+SKCMS_API bool skcms_TransferFunction_isHLGish (const skcms_TransferFunction*);
 
 // Unified representation of 'curv' or 'para' tag data, or a 1D table from 'mft1' or 'mft2'
 typedef union skcms_Curve {
@@ -202,36 +209,36 @@ typedef struct skcms_ICCProfile {
 } skcms_ICCProfile;
 
 // The sRGB color profile is so commonly used that we offer a canonical skcms_ICCProfile for it.
-GFXCMS_API const skcms_ICCProfile* skcms_sRGB_profile(void);
+SKCMS_API const skcms_ICCProfile* skcms_sRGB_profile(void);
 // Ditto for XYZD50, the most common profile connection space.
-GFXCMS_API const skcms_ICCProfile* skcms_XYZD50_profile(void);
+SKCMS_API const skcms_ICCProfile* skcms_XYZD50_profile(void);
 
-GFXCMS_API const skcms_TransferFunction* skcms_sRGB_TransferFunction(void);
-GFXCMS_API const skcms_TransferFunction* skcms_sRGB_Inverse_TransferFunction(void);
-GFXCMS_API const skcms_TransferFunction* skcms_Identity_TransferFunction(void);
+SKCMS_API const skcms_TransferFunction* skcms_sRGB_TransferFunction(void);
+SKCMS_API const skcms_TransferFunction* skcms_sRGB_Inverse_TransferFunction(void);
+SKCMS_API const skcms_TransferFunction* skcms_Identity_TransferFunction(void);
 
 // Practical equality test for two skcms_ICCProfiles.
 // The implementation is subject to change, but it will always try to answer
 // "can I substitute A for B?" and "can I skip transforming from A to B?".
-GFXCMS_API bool skcms_ApproximatelyEqualProfiles(const skcms_ICCProfile* A,
+SKCMS_API bool skcms_ApproximatelyEqualProfiles(const skcms_ICCProfile* A,
                                                 const skcms_ICCProfile* B);
 
 // Practical test that answers: Is curve roughly the inverse of inv_tf? Typically used by passing
 // the inverse of a known parametric transfer function (like sRGB), to determine if a particular
 // curve is very close to sRGB.
-GFXCMS_API bool skcms_AreApproximateInverses(const skcms_Curve* curve,
+SKCMS_API bool skcms_AreApproximateInverses(const skcms_Curve* curve,
                                             const skcms_TransferFunction* inv_tf);
 
 // Similar to above, answering the question for all three TRC curves of the given profile. Again,
 // passing skcms_sRGB_InverseTransferFunction as inv_tf will answer the question:
 // "Does this profile have a transfer function that is very close to sRGB?"
-GFXCMS_API bool skcms_TRCs_AreApproximateInverse(const skcms_ICCProfile* profile,
+SKCMS_API bool skcms_TRCs_AreApproximateInverse(const skcms_ICCProfile* profile,
                                                 const skcms_TransferFunction* inv_tf);
 
 // Parse an ICC profile and return true if possible, otherwise return false.
 // Selects an A2B profile (if present) according to priority list (each entry 0-2).
 // The buffer is not copied; it must remain valid as long as the skcms_ICCProfile will be used.
-GFXCMS_API bool skcms_ParseWithA2BPriority(const void*, size_t,
+SKCMS_API bool skcms_ParseWithA2BPriority(const void*, size_t,
                                           const int priority[], int priorities,
                                           skcms_ICCProfile*);
 
@@ -244,12 +251,12 @@ static inline bool skcms_Parse(const void* buf, size_t len, skcms_ICCProfile* pr
                                       profile);
 }
 
-GFXCMS_API bool skcms_ApproximateCurve(const skcms_Curve* curve,
+SKCMS_API bool skcms_ApproximateCurve(const skcms_Curve* curve,
                                       skcms_TransferFunction* approx,
                                       float* max_error);
 
-GFXCMS_API bool skcms_GetCHAD(const skcms_ICCProfile*, skcms_Matrix3x3*);
-GFXCMS_API bool skcms_GetWTPT(const skcms_ICCProfile*, float xyz[3]);
+SKCMS_API bool skcms_GetCHAD(const skcms_ICCProfile*, skcms_Matrix3x3*);
+SKCMS_API bool skcms_GetWTPT(const skcms_ICCProfile*, float xyz[3]);
 
 // These are common ICC signature values
 enum {
@@ -268,8 +275,6 @@ typedef enum skcms_PixelFormat {
     skcms_PixelFormat_A_8_,
     skcms_PixelFormat_G_8,
     skcms_PixelFormat_G_8_,
-    skcms_PixelFormat_RGBA_8888_Palette8,
-    skcms_PixelFormat_BGRA_8888_Palette8,
 
     skcms_PixelFormat_RGB_565,
     skcms_PixelFormat_BGR_565,
@@ -311,6 +316,9 @@ typedef enum skcms_PixelFormat {
     skcms_PixelFormat_BGR_fff,        // Pointers must be 32-bit aligned.
     skcms_PixelFormat_RGBA_ffff,
     skcms_PixelFormat_BGRA_ffff,
+
+    skcms_PixelFormat_RGB_101010x_XR,  // Note: This is located here to signal no clamping.
+    skcms_PixelFormat_BGR_101010x_XR,  // Compatible with MTLPixelFormatBGR10_XR.
 } skcms_PixelFormat;
 
 // We always store any alpha channel linearly.  In the chart below, tf-1() is the inverse
@@ -334,7 +342,7 @@ typedef enum skcms_AlphaFormat {
 
 // Convert npixels pixels from src format and color profile to dst format and color profile
 // and return true, otherwise return false.  It is safe to alias dst == src if dstFmt == srcFmt.
-GFXCMS_API bool skcms_Transform(const void*             src,
+SKCMS_API bool skcms_Transform(const void*             src,
                                skcms_PixelFormat       srcFmt,
                                skcms_AlphaFormat       srcAlpha,
                                const skcms_ICCProfile* srcProfile,
@@ -344,43 +352,31 @@ GFXCMS_API bool skcms_Transform(const void*             src,
                                const skcms_ICCProfile* dstProfile,
                                size_t                  npixels);
 
-// As skcms_Transform(), supporting srcFmts with a palette.
-GFXCMS_API bool skcms_TransformWithPalette(const void*             src,
-                                          skcms_PixelFormat       srcFmt,
-                                          skcms_AlphaFormat       srcAlpha,
-                                          const skcms_ICCProfile* srcProfile,
-                                          void*                   dst,
-                                          skcms_PixelFormat       dstFmt,
-                                          skcms_AlphaFormat       dstAlpha,
-                                          const skcms_ICCProfile* dstProfile,
-                                          size_t                  npixels,
-                                          const void*             palette);
-
 // If profile can be used as a destination in skcms_Transform, return true. Otherwise, attempt to
 // rewrite it with approximations where reasonable. If successful, return true. If no reasonable
 // approximation exists, leave the profile unchanged and return false.
-GFXCMS_API bool skcms_MakeUsableAsDestination(skcms_ICCProfile* profile);
+SKCMS_API bool skcms_MakeUsableAsDestination(skcms_ICCProfile* profile);
 
 // If profile can be used as a destination with a single parametric transfer function (ie for
 // rasterization), return true. Otherwise, attempt to rewrite it with approximations where
 // reasonable. If successful, return true. If no reasonable approximation exists, leave the
 // profile unchanged and return false.
-GFXCMS_API bool skcms_MakeUsableAsDestinationWithSingleCurve(skcms_ICCProfile* profile);
+SKCMS_API bool skcms_MakeUsableAsDestinationWithSingleCurve(skcms_ICCProfile* profile);
 
 // Returns a matrix to adapt XYZ color from given the whitepoint to D50.
-GFXCMS_API bool skcms_AdaptToXYZD50(float wx, float wy,
+SKCMS_API bool skcms_AdaptToXYZD50(float wx, float wy,
                                    skcms_Matrix3x3* toXYZD50);
 
 // Returns a matrix to convert RGB color into XYZ adapted to D50, given the
 // primaries and whitepoint of the RGB model.
-GFXCMS_API bool skcms_PrimariesToXYZD50(float rx, float ry,
+SKCMS_API bool skcms_PrimariesToXYZD50(float rx, float ry,
                                        float gx, float gy,
                                        float bx, float by,
                                        float wx, float wy,
                                        skcms_Matrix3x3* toXYZD50);
 
 // Call before your first call to skcms_Transform() to skip runtime CPU detection.
-GFXCMS_API void skcms_DisableRuntimeCPUDetection(void);
+SKCMS_API void skcms_DisableRuntimeCPUDetection(void);
 
 // Utilities for programmatically constructing profiles
 static inline void skcms_Init(skcms_ICCProfile* p) {
@@ -406,5 +402,3 @@ static inline void skcms_SetXYZD50(skcms_ICCProfile* p, const skcms_Matrix3x3* m
 #ifdef __cplusplus
 }
 #endif
-
-}  // namespace gfx
