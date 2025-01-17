@@ -44,7 +44,6 @@ template <typename T> using V = T;
 #define N 4
 template <typename T> using V = skcms_private::Vec<N, T>;
 #endif
-using namespace gfx;
 #include "Transform_inl.h"
 
 }  // namespace baseline
