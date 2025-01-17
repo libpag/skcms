@@ -33,9 +33,9 @@
 #endif
 #endif
 
-using namespace gfx::skcms_private;
-
 namespace gfx {
+using namespace skcms_private;
+
 static bool sAllowRuntimeCPUDetection = true;
 
 void skcms_DisableRuntimeCPUDetection() { sAllowRuntimeCPUDetection = false; }

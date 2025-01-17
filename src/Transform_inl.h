@@ -11,7 +11,6 @@
 //    - N:    SIMD width of all vectors; 1, 4, 8 or 16 (preprocessor define)
 //    - V<T>: a template to create a vector of N T's.
 
-namespace gfx {
 
 using F = V<float>;
 using I32 = V<int32_t>;
@@ -1619,4 +1618,3 @@ void run_program(const Op* program,
         memcpy((char*)dst + (size_t)i * dst_bpp, tmp, (size_t)n * dst_bpp);
     }
 }
-}  // namespace gfx
