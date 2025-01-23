@@ -14,16 +14,16 @@ file(GLOB_RECURSE SKCMS_SOURCES
 )
 
 file(GLOB_RECURSE SKCMS_TRANSFORM_HSW
-        src/skcms_Transform.h,
-        src/skcms_TransformHsw.cc,
-        src/skcms_internals.h,
+        src/skcms_Transform.h
+        src/skcms_TransformHsw.cc
+        src/skcms_internals.h
         src/skcms_public.h
 )
 
 file(GLOB_RECURSE SKCMS_TRANSFORM_SKX
-        src/skcms_Transform.h,
-        src/skcms_TransformSkx.cc,
-        src/skcms_internals.h,
+        src/skcms_Transform.h
+        src/skcms_TransformSkx.cc
+        src/skcms_internals.h
         src/skcms_public.h
 )
 
