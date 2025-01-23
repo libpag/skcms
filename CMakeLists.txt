@@ -27,11 +27,12 @@ file(GLOB_RECURSE SKCMS_TRANSFORM_SKX
         src/skcms_public.h
 )
 
-add_library(skcms STATIC ${SKCMS_SOURCES})
-
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" AND NOT ANDROID)
     add_library(skcms_transform_hsw STATIC ${SKCMS_TRANSFORM_HSW})
     add_library(skcms_transform_skx STATIC ${SKCMS_TRANSFORM_SKX})
+
+    set_target_properties(skcms_transform_hsw PROPERTIES LINKER_LANGUAGE CXX)
+    set_target_properties(skcms_transform_skx PROPERTIES LINKER_LANGUAGE CXX)
 
     if(WIN32)
         if(CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -45,8 +46,8 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" AND NOT ANDROID)
         target_compile_options(skcms_transform_hsw PRIVATE -mavx2 -mf16c)
         target_compile_options(skcms_transform_skx PRIVATE -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
     endif()
-
-    target_link_libraries(skcms PRIVATE skcms_transform_hsw skcms_transform_skx)
+    add_library(skcms ${SKCMS_SOURCES} $<TARGET_OBJECTS:skcms_transform_hsw> $<TARGET_OBJECTS:skcms_transform_skx>)
 else()
+    add_library(skcms STATIC ${SKCMS_SOURCES})
     target_compile_definitions(skcms PRIVATE SKCMS_DISABLE_HSW SKCMS_DISABLE_SKX)
 endif()
