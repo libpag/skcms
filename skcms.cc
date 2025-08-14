@@ -149,7 +149,7 @@ static skcms_TFType classify(const skcms_TransferFunction& tf,
         switch (enum_g) {
             case skcms_TFType_PQish:
                 if (pq) {
-                    memcpy(pq , &tf.a, sizeof(*pq ));
+                    memcpy(pq, &tf.a, sizeof(*pq));
                 }
                 return skcms_TFType_PQish;
             case skcms_TFType_HLGish:
@@ -178,13 +178,11 @@ static skcms_TFType classify(const skcms_TransferFunction& tf,
 
     // Basic soundness checks for sRGBish transfer functions.
     if (isfinitef_(tf.a + tf.b + tf.c + tf.d + tf.e + tf.f + tf.g)
-            // a,c,d,g should be non-negative to make any sense.
-            && tf.a >= 0
-            && tf.c >= 0
-            && tf.d >= 0
-            && tf.g >= 0
-            // Raising a negative value to a fractional tf->g produces complex numbers.
-            && tf.a * tf.d + tf.b >= 0) {
+        // a,c,d,g should be non-negative to make any sense.
+        && tf.a >= 0 && tf.c >= 0 && tf.d >= 0 &&
+        tf.g >= 0
+        // Raising a negative value to a fractional tf->g produces complex numbers.
+        && tf.a * tf.d + tf.b >= 0) {
         return skcms_TFType_sRGBish;
     }
 
@@ -224,25 +222,23 @@ bool skcms_TransferFunction_makeScaledHLGish(
     return true;
 }
 
-void skcms_TransferFunction_makePQ(
-    skcms_TransferFunction* tf,
-    float hdr_reference_white_luminance) {
-    *tf = { TFKind_marker(skcms_TFType_PQ),
-            hdr_reference_white_luminance,
-            0.f,0.f,0.f,0.f,0.f };
+void skcms_TransferFunction_makePQ(skcms_TransferFunction* tf,
+                                   float hdr_reference_white_luminance) {
+    *tf = {TFKind_marker(skcms_TFType_PQ), hdr_reference_white_luminance, 0.f, 0.f, 0.f, 0.f, 0.f};
     assert(skcms_TransferFunction_isPQ(tf));
 }
 
-void skcms_TransferFunction_makeHLG(
-    skcms_TransferFunction* tf,
-    float hdr_reference_white_luminance,
-    float peak_luminance,
-    float system_gamma) {
-    *tf = { TFKind_marker(skcms_TFType_HLG),
-            hdr_reference_white_luminance,
-            peak_luminance,
-            system_gamma,
-            0.f, 0.f, 0.f };
+void skcms_TransferFunction_makeHLG(skcms_TransferFunction* tf,
+                                    float hdr_reference_white_luminance,
+                                    float peak_luminance,
+                                    float system_gamma) {
+    *tf = {TFKind_marker(skcms_TFType_HLG),
+           hdr_reference_white_luminance,
+           peak_luminance,
+           system_gamma,
+           0.f,
+           0.f,
+           0.f};
     assert(skcms_TransferFunction_isHLG(tf));
 }
 
@@ -250,38 +246,37 @@ float skcms_TransferFunction_eval(const skcms_TransferFunction* tf, float x) {
     float sign = x < 0 ? -1.0f : 1.0f;
     x *= sign;
 
-    TF_PQish  pq;
+    TF_PQish pq;
     TF_HLGish hlg;
     switch (classify(*tf, &pq, &hlg)) {
-        case skcms_TFType_Invalid: break;
+        case skcms_TFType_Invalid:
+            break;
 
         case skcms_TFType_HLG: {
             const float a = 0.17883277f;
             const float b = 0.28466892f;
             const float c = 0.55991073f;
-            return sign * (x <= 0.5f ? x*x/3.f : (expf_((x-c)/a) + b) / 12.f);
+            return sign * (x <= 0.5f ? x * x / 3.f : (expf_((x - c) / a) + b) / 12.f);
         }
 
         case skcms_TFType_HLGish: {
             const float K = hlg.K_minus_1 + 1.0f;
-            return K * sign * (x*hlg.R <= 1 ? powf_(x*hlg.R, hlg.G)
-                                            : expf_((x-hlg.c)*hlg.a) + hlg.b);
+            return K * sign *
+                   (x * hlg.R <= 1 ? powf_(x * hlg.R, hlg.G) : expf_((x - hlg.c) * hlg.a) + hlg.b);
         }
 
         // skcms_TransferFunction_invert() inverts R, G, and a for HLGinvish so this math is fast.
         case skcms_TFType_HLGinvish: {
             const float K = hlg.K_minus_1 + 1.0f;
             x /= K;
-            return sign * (x <= 1 ? hlg.R * powf_(x, hlg.G)
-                                  : hlg.a * logf_(x - hlg.b) + hlg.c);
+            return sign * (x <= 1 ? hlg.R * powf_(x, hlg.G) : hlg.a * logf_(x - hlg.b) + hlg.c);
         }
 
         case skcms_TFType_sRGBish:
-            return sign * (x < tf->d ?       tf->c * x + tf->f
-                                     : powf_(tf->a * x + tf->b, tf->g) + tf->e);
+            return sign * (x < tf->d ? tf->c * x + tf->f : powf_(tf->a * x + tf->b, tf->g) + tf->e);
 
         case skcms_TFType_PQ: {
-            const float c1 =  107 / 128.f;
+            const float c1 = 107 / 128.f;
             const float c2 = 2413 / 128.f;
             const float c3 = 2392 / 128.f;
             const float m1 = 1305 / 8192.f;
@@ -2115,46 +2110,62 @@ skcms_Matrix3x3 skcms_Matrix3x3_concat(const skcms_Matrix3x3* A, const skcms_Mat
 [[clang::no_sanitize("float-divide-by-zero")]]  // Checked for by classify() on the way out.
 #endif
 bool skcms_TransferFunction_invert(const skcms_TransferFunction* src, skcms_TransferFunction* dst) {
-    TF_PQish  pq;
+    TF_PQish pq;
     TF_HLGish hlg;
     switch (classify(*src, &pq, &hlg)) {
-        case skcms_TFType_Invalid: return false;
-        case skcms_TFType_PQ:      return false;
-        case skcms_TFType_HLG:     return false;
-        case skcms_TFType_sRGBish: break;  // handled below
+        case skcms_TFType_Invalid:
+            return false;
+        case skcms_TFType_PQ:
+            return false;
+        case skcms_TFType_HLG:
+            return false;
+        case skcms_TFType_sRGBish:
+            break;  // handled below
 
         case skcms_TFType_PQish:
-            *dst = { TFKind_marker(skcms_TFType_PQish), -pq.A,  pq.D, 1.0f/pq.F
-                                                      ,  pq.B, -pq.E, 1.0f/pq.C};
+            *dst = {TFKind_marker(skcms_TFType_PQish),
+                    -pq.A,
+                    pq.D,
+                    1.0f / pq.F,
+                    pq.B,
+                    -pq.E,
+                    1.0f / pq.C};
             return true;
 
         case skcms_TFType_HLGish:
-            *dst = { TFKind_marker(skcms_TFType_HLGinvish), 1.0f/hlg.R, 1.0f/hlg.G
-                                                          , 1.0f/hlg.a, hlg.b, hlg.c
-                                                          , hlg.K_minus_1 };
+            *dst = {TFKind_marker(skcms_TFType_HLGinvish),
+                    1.0f / hlg.R,
+                    1.0f / hlg.G,
+                    1.0f / hlg.a,
+                    hlg.b,
+                    hlg.c,
+                    hlg.K_minus_1};
             return true;
 
         case skcms_TFType_HLGinvish:
-            *dst = { TFKind_marker(skcms_TFType_HLGish), 1.0f/hlg.R, 1.0f/hlg.G
-                                                       , 1.0f/hlg.a, hlg.b, hlg.c
-                                                       , hlg.K_minus_1 };
+            *dst = {TFKind_marker(skcms_TFType_HLGish),
+                    1.0f / hlg.R,
+                    1.0f / hlg.G,
+                    1.0f / hlg.a,
+                    hlg.b,
+                    hlg.c,
+                    hlg.K_minus_1};
             return true;
     }
 
-    assert (classify(*src) == skcms_TFType_sRGBish);
+    assert(classify(*src) == skcms_TFType_sRGBish);
 
     // We're inverting this function, solving for x in terms of y.
     //   y = (cx + f)         x < d
     //       (ax + b)^g + e   x ≥ d
     // The inverse of this function can be expressed in the same piecewise form.
-    skcms_TransferFunction inv = {0,0,0,0,0,0,0};
+    skcms_TransferFunction inv = {0, 0, 0, 0, 0, 0, 0};
 
     // We'll start by finding the new threshold inv.d.
     // In principle we should be able to find that by solving for y at x=d from either side.
     // (If those two d values aren't the same, it's a discontinuous transfer function.)
-    float d_l =       src->c * src->d + src->f,
-          d_r = powf_(src->a * src->d + src->b, src->g) + src->e;
-    if (fabsf_(d_l - d_r) > 1/512.0f) {
+    float d_l = src->c * src->d + src->f, d_r = powf_(src->a * src->d + src->b, src->g) + src->e;
+    if (fabsf_(d_l - d_r) > 1 / 512.0f) {
         return false;
     }
     inv.d = d_l;  // TODO(mtklein): better in practice to choose d_r?
@@ -2165,8 +2176,8 @@ bool skcms_TransferFunction_invert(const skcms_TransferFunction* src, skcms_Tran
         //        y       = cx + f
         //        y - f   = cx
         //   (1/c)y - f/c = x
-        inv.c =    1.0f/src->c;
-        inv.f = -src->f/src->c;
+        inv.c = 1.0f / src->c;
+        inv.f = -src->f / src->c;
     }
 
     // The interesting part is inverting the nonlinear section:
@@ -2206,8 +2217,8 @@ bool skcms_TransferFunction_invert(const skcms_TransferFunction* src, skcms_Tran
         return false;
     }
 
-    assert (inv.a >= 0);
-    assert (inv.a * inv.d + inv.b >= 0);
+    assert(inv.a >= 0);
+    assert(inv.a * inv.d + inv.b >= 0);
 
     // Now in principle we're done.
     // But to preserve the valuable invariant inv(src(1.0f)) == 1.0f, we'll tweak
@@ -2616,34 +2627,40 @@ static OpAndArg select_curve_op(const skcms_Curve* curve, int channel) {
         Op sGamma, sRGBish, PQish, HLGish, HLGinvish, table;
     };
     static constexpr OpType kOps[] = {
-        { Op::gamma_r, Op::tf_r, Op::pq_r, Op::hlg_r, Op::hlginv_r, Op::table_r },
-        { Op::gamma_g, Op::tf_g, Op::pq_g, Op::hlg_g, Op::hlginv_g, Op::table_g },
-        { Op::gamma_b, Op::tf_b, Op::pq_b, Op::hlg_b, Op::hlginv_b, Op::table_b },
-        { Op::gamma_a, Op::tf_a, Op::pq_a, Op::hlg_a, Op::hlginv_a, Op::table_a },
+            {Op::gamma_r, Op::tf_r, Op::pq_r, Op::hlg_r, Op::hlginv_r, Op::table_r},
+            {Op::gamma_g, Op::tf_g, Op::pq_g, Op::hlg_g, Op::hlginv_g, Op::table_g},
+            {Op::gamma_b, Op::tf_b, Op::pq_b, Op::hlg_b, Op::hlginv_b, Op::table_b},
+            {Op::gamma_a, Op::tf_a, Op::pq_a, Op::hlg_a, Op::hlginv_a, Op::table_a},
     };
     const auto& op = kOps[channel];
 
     if (curve->table_entries == 0) {
-        const OpAndArg noop = { Op::load_a8/*doesn't matter*/, nullptr };
+        const OpAndArg noop = {Op::load_a8 /*doesn't matter*/, nullptr};
 
         const skcms_TransferFunction& tf = curve->parametric;
 
         if (tf_is_gamma(tf)) {
-            return tf.g != 1 ? OpAndArg{op.sGamma, &tf}
-            : noop;
+            return tf.g != 1 ? OpAndArg{op.sGamma, &tf} : noop;
         }
 
         switch (classify(tf)) {
-            case skcms_TFType_Invalid:    return noop;
+            case skcms_TFType_Invalid:
+                return noop;
             // TODO(https://issues.skia.org/issues/420956739): Consider adding
             // support for PQ and HLG. Generally any code that goes through this
             // path would also want tone mapping too.
-            case skcms_TFType_PQ:         return noop;
-            case skcms_TFType_HLG:        return noop;
-            case skcms_TFType_sRGBish:    return OpAndArg{op.sRGBish,   &tf};
-            case skcms_TFType_PQish:      return OpAndArg{op.PQish,     &tf};
-            case skcms_TFType_HLGish:     return OpAndArg{op.HLGish,    &tf};
-            case skcms_TFType_HLGinvish:  return OpAndArg{op.HLGinvish, &tf};
+            case skcms_TFType_PQ:
+                return noop;
+            case skcms_TFType_HLG:
+                return noop;
+            case skcms_TFType_sRGBish:
+                return OpAndArg{op.sRGBish, &tf};
+            case skcms_TFType_PQish:
+                return OpAndArg{op.PQish, &tf};
+            case skcms_TFType_HLGish:
+                return OpAndArg{op.HLGish, &tf};
+            case skcms_TFType_HLGinvish:
+                return OpAndArg{op.HLGinvish, &tf};
         }
     }
     return OpAndArg{op.table, curve};
