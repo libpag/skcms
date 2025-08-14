@@ -61,6 +61,8 @@ typedef enum skcms_TFType {
     skcms_TFType_PQish,
     skcms_TFType_HLGish,
     skcms_TFType_HLGinvish,
+    skcms_TFType_PQ,
+    skcms_TFType_HLG,
 } skcms_TFType;
 
 // Identify which kind of transfer function is encoded in an skcms_TransferFunction
